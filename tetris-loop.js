@@ -85,7 +85,7 @@
     	"\u28F6", // 7
     	"\u28E6", // 8
     	"\u28D4", // 9
-    	"\u28E4", // 0
+    	"\u28F4", // 0
     	"\u28C1", // a
     	"\u28C3", // b
     	"\u28C9", // c
@@ -99,6 +99,11 @@
     	"\u28C5", // k
     	"\u28C7"  // l
     ]];
+
+    var ALT_COLUMN_STATES = ["-","1","2","3","4","5","6","7","8","9","0","a","b","c","d","e","f","g","h","i","j","k","l"];
+
+    var EMPTY_COLUMN = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+    var GAME_TIME = 90000; //ms
 	//end constants
 
     var board = window.board = [
@@ -122,6 +127,10 @@
 	}
 
   var score = 0;
+  var isGameRunning = false;
+  var displayMode = 1;
+  var displayOffset = 0;
+  var endTime;
 
    function runGameLoop() {
       calculateLines();
@@ -134,25 +143,75 @@
    }
 
    function isGameOver() {
+      if(endTime <= new Date().getTime()) return true;
+      for(var i = 0; i < BOARD_WIDTH; i ++) {
+        if(board[i][BOARD_HEIGHT-1] || board[i][BOARD_HEIGHT-2])
+          return true;
+      }
       return false;
    }
 
-   function updateDisplay() {
-   	var boardstring = "\u28B8"; //left wall
+   function doGameEnd() {
+    $("#output").html(
+      "\u281B\u2801\u280D\u2811\u2800\u2815\u2827\u2811\u2817\u2800"
+      + "\u280E\u2809\u2815\u2817\u2811\u2800" 
+      + COLUMN_STATES[0][Math.floor(score / 10)]
+      + (score % 10 ? COLUMN_STATES[0][score % 10] : COLUMN_STATES[0][10]) 
+      ); //GAME OVER SCORE ##
 
-   		for(var i = 0; i < BOARD_WIDTH; i++) {
-   			var h = 0;
-   			for(var j = 0; j < BOARD_HEIGHT; j ++ ) {
-   				if(board[i][j]) h = j + 1; 
-   			}
-   			boardstring += 
-   				COLUMN_STATES[i >= currentPiece.left 
-   				             && i < currentPiece.left + currentPiece.width 
-   				             ? 1 : 0]
-   				            [h]; 
-   		}
-   	boardstring += "\u2847\u2800\u2800"; //right wall and space
-   	boardstring += getCurrentPieceBraille();
+       for(var i = 0; i < BOARD_WIDTH; i ++) {
+        board[i] = EMPTY_COLUMN.slice(0);
+      }
+      score = 0;
+      isGameRunning = false;
+   };
+
+   function updateDisplay() {
+    var boardstring = "";
+    var altboardstring = "";
+    if(displayMode===1) {
+     	boardstring += "\u28B8"; //left wall
+      
+     		for(var i = 0; i < BOARD_WIDTH; i++) {
+     			var h = 0;
+     			for(var j = 0; j < BOARD_HEIGHT; j ++ ) {
+     				if(board[i][j]) h = j + 1; 
+     			}
+     			boardstring += 
+     				COLUMN_STATES[i >= currentPiece.left 
+     				             && i < currentPiece.left + currentPiece.width 
+     				             ? 1 : 0]
+     				            [h]; 
+     		}
+     	boardstring += "\u2847\u2800"; //right wall and space
+    } else { // graphical display mode
+      boardstring += "\u28FF\u2800"; //left wall
+      for(var i = 0; i < BOARD_WIDTH ; i+=2) {
+        boardstring += convertPixelArrayToBraille(
+          [
+            (board[i][displayOffset] ? 1 : 0)
+            + (board[i][displayOffset + 1] ? 2 : 0)
+            + (board[i][displayOffset + 2] ? 4 : 0)
+            + (board[i][displayOffset + 3] ? 8 : 0),
+            (board[i+1][displayOffset] ? 1 : 0)
+            + (board[i+1][displayOffset + 1] ? 2 : 0)
+            + (board[i+1][displayOffset + 2] ? 4 : 0)
+            + (board[i+1][displayOffset + 3] ? 8 : 0)
+          ]
+        );
+      }
+      boardstring += "\u2800\u28FF\u2800";
+      boardstring += COLUMN_STATES[0][Math.floor(score / 10)];  //score readout tens
+      boardstring += score % 10 ? COLUMN_STATES[0][score % 10] : COLUMN_STATES[0][10]; //ones
+      boardstring += "\u2800"
+    }
+
+    boardstring += "\u2800";
+    var secondsLeft = Math.ceil((endTime - new Date().getTime()) / 1000);
+    boardstring += COLUMN_STATES[0][Math.floor(secondsLeft / 10)];  //time left readout tens
+    boardstring += secondsLeft % 10 ? COLUMN_STATES[0][secondsLeft % 10] : COLUMN_STATES[0][10]; //ones
+    boardstring += "\u2800";
+   	boardstring += getCurrentPieceBraille(); //display the piece
     $("#output").html(boardstring);
    }
 
@@ -196,7 +255,7 @@
       1    1    1    1
    */
    function convertPixelArrayToBraille(p) {
-    return String.fromCharCode(0x2800
+    var x = String.fromCharCode(0x2800
       + (p[0] >>> 3 & 1) * 1
       + (p[0] >>> 2 & 1) * 2
       + (p[0] >>> 1 & 1) * 4
@@ -205,7 +264,8 @@
       + (p[1] >>> 2 & 1) * 0x10
       + (p[1] >>> 1 & 1) * 0x20
       + (p[1] & 1) * 0x80
-    ) + String.fromCharCode(0x2800
+    ); 
+    if(p.length > 2) x += String.fromCharCode(0x2800
       + (p[2] >>> 3 & 1) * 1
       + (p[2] >>> 2 & 1) * 2
       + (p[2] >>> 1 & 1) * 4
@@ -215,6 +275,7 @@
       + (p[3] >>> 1 & 1) * 0x20
       + (p[3] & 1) * 0x80
     );
+      return x;
    }
 
    function getColumnHeight(col) {
@@ -225,35 +286,61 @@
     return h;
    }
 
+   function runTimer() {
+    if(!isGameRunning) return;
+    var now = new Date().getTime();
+    if(endTime <= now) {
+      doGameEnd();
+    } else {
+      updateDisplay();
+      setTimeout(runTimer, 100);
+    }
+   }
+
 
    $(document.body).bind("keydown.left", function() {
-   	//move piece left
-   	if(currentPiece.left > 0) {
-   		currentPiece.left--;
-	   	updateDisplay();
-   	}
+    if(!isGameRunning) return;
+    if(displayMode === 1) {
+     	//move piece left
+     	if(currentPiece.left > 0) {
+     		currentPiece.left--;
+  	   	updateDisplay();
+     	}
+     }
    });
 
    $(document.body).bind("keydown.right", function() {
-   	//move piece right
-   	if(currentPiece.left + currentPiece.width < BOARD_WIDTH) {
-   		currentPiece.left++;
-   		updateDisplay();
-   	}
-   	//update display
+    if(!isGameRunning) return;
+    if(displayMode === 1) {
+     	//move piece right
+     	if(currentPiece.left + currentPiece.width < BOARD_WIDTH) {
+     		currentPiece.left++;
+     		updateDisplay();
+     	}
+   }
    });
 
    $(document.body).bind("keydown.up", function() {
-   	//rotate piece
-    currentPiece.rotation = (currentPiece.rotation + 1) % 4;
-    currentPiece.width = piecewidth[currentPiece.type][currentPiece.rotation];
-    if(currentPiece.left + currentPiece.width > BOARD_WIDTH) {
-      currentPiece.left = BOARD_WIDTH - currentPiece.width;
-    }
-   	updateDisplay();
+    if(!isGameRunning) return;
+    if(displayMode === 1) {
+     	//rotate piece
+      currentPiece.rotation = (currentPiece.rotation + 1) % 4;
+      currentPiece.width = piecewidth[currentPiece.type][currentPiece.rotation];
+      if(currentPiece.left + currentPiece.width > BOARD_WIDTH) {
+        currentPiece.left = BOARD_WIDTH - currentPiece.width;
+      }
+     	updateDisplay();
+     } else {
+      if(displayOffset < BOARD_HEIGHT - 4) {
+        displayOffset += 4;
+        updateDisplay();
+      }
+     }
    });
 
    $(document.body).bind("keydown.down", function() {
+    if(!isGameRunning) return;
+    if(displayMode == 1) {
    	  //find pain point, i.e. where piece lands.
       var h = 0;
       var col = 0;
@@ -282,7 +369,26 @@
           h > 2 && (board[i + currentPiece.left][h - 3] |= (piece[i] & 1));
       }
    	  runGameLoop();
+    } else {
+      if(displayOffset > 3) {
+        displayOffset -= 4;
+        updateDisplay();
+      }
+    }
    });
 
-   runGameLoop();
+  $(document.body).bind("keydown.space", function() {
+    if(isGameRunning) {
+      displayMode = displayMode ? 0 : 1;
+      displayOffset = 0;
+     updateDisplay(); 
+   } else {
+    isGameRunning = true;
+    endTime = GAME_TIME + new Date().getTime();
+    setTimeout(runTimer, 0);
+    runGameLoop();
+   }
+  });
+
+   $("#output").html("\u280F\u2817\u2811\u280E\u280E\u2800\u280E\u280F\u2801\u2809\u2811"); // PRESS SPACE
 })();
