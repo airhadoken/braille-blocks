@@ -130,6 +130,7 @@
   var isGameRunning = false;
   var displayMode = 1;
   var displayOffset = 0;
+  var displayPage = 4;
   var endTime;
 
    function runGameLoop() {
@@ -158,6 +159,7 @@
       + COLUMN_STATES[0][Math.floor(score / 10)]
       + (score % 10 ? COLUMN_STATES[0][score % 10] : COLUMN_STATES[0][10]) 
       ); //GAME OVER SCORE ##
+    $("#alt-output").html("GAME OVER SCORE " + score);
 
        for(var i = 0; i < BOARD_WIDTH; i ++) {
         board[i] = EMPTY_COLUMN.slice(0);
@@ -171,7 +173,7 @@
     var altboardstring = "";
     if(displayMode===1) {
      	boardstring += "\u28B8"; //left wall
-      
+      altboardstring = "|"
      		for(var i = 0; i < BOARD_WIDTH; i++) {
      			var h = 0;
      			for(var j = 0; j < BOARD_HEIGHT; j ++ ) {
@@ -181,13 +183,23 @@
      				COLUMN_STATES[i >= currentPiece.left 
      				             && i < currentPiece.left + currentPiece.width 
      				             ? 1 : 0]
-     				            [h]; 
+     				            [h];
+          altboardstring += 
+             (i >= currentPiece.left 
+                         && i < currentPiece.left + currentPiece.width 
+                         ? "<b>" : "")
+             + ALT_COLUMN_STATES[h]
+             + (i >= currentPiece.left 
+                         && i < currentPiece.left + currentPiece.width 
+                         ? "</b>" : "")
      		}
      	boardstring += "\u2847\u2800"; //right wall and space
+      altboardstring += "|\u00A0";
     } else { // graphical display mode
       boardstring += "\u28FF\u2800"; //left wall
+      altboardstring += "||";
       for(var i = 0; i < BOARD_WIDTH ; i+=2) {
-        boardstring += convertPixelArrayToBraille(
+        var nextchar = convertPixelArrayToBraille(
           [
             (board[i][displayOffset] ? 1 : 0)
             + (board[i][displayOffset + 1] ? 2 : 0)
@@ -199,11 +211,16 @@
             + (board[i+1][displayOffset + 3] ? 8 : 0)
           ]
         );
+        boardstring += nextchar;
+        altboardstring += nextchar;
       }
       boardstring += "\u2800\u28FF\u2800";
       boardstring += COLUMN_STATES[0][Math.floor(score / 10)];  //score readout tens
       boardstring += score % 10 ? COLUMN_STATES[0][score % 10] : COLUMN_STATES[0][10]; //ones
       boardstring += "\u2800"
+
+      altboardstring += "||\u00A0";
+      altboardstring += score + "\u00A0";
     }
 
     boardstring += "\u2800";
@@ -212,7 +229,12 @@
     boardstring += secondsLeft % 10 ? COLUMN_STATES[0][secondsLeft % 10] : COLUMN_STATES[0][10]; //ones
     boardstring += "\u2800";
    	boardstring += getCurrentPieceBraille(); //display the piece
+      altboardstring += secondsLeft + "\u00A0";
+      altboardstring += getCurrentPieceBraille(); //display the piece
+
+
     $("#output").html(boardstring);
+    $("#alt-output").html(altboardstring);
    }
 
    function calculateLines() {
@@ -331,10 +353,12 @@
       }
      	updateDisplay();
      } else {
-      if(displayOffset < BOARD_HEIGHT - 4) {
-        displayOffset += 4;
-        updateDisplay();
+      if(displayOffset <= BOARD_HEIGHT - 6 - displayPage) {
+        displayOffset += displayPage;
+      } else {
+        displayOffset = BOARD_HEIGHT - 6;
       }
+      updateDisplay();
      }
    });
 
@@ -370,10 +394,12 @@
       }
    	  runGameLoop();
     } else {
-      if(displayOffset > 3) {
-        displayOffset -= 4;
-        updateDisplay();
+      if(displayOffset >= displayPage) {
+        displayOffset -= displayPage;
+      } else {
+        displayOffset = 0;
       }
+      updateDisplay();
     }
    });
 
@@ -384,11 +410,21 @@
      updateDisplay(); 
    } else {
     isGameRunning = true;
+    displayMode = 1;
     endTime = GAME_TIME + new Date().getTime();
     setTimeout(runTimer, 0);
     runGameLoop();
    }
   });
 
+  $(document.body).bind("keydown.1.2.3.4", function(ev) {
+    displayPage = ev.which - 48;
+  });
+
+  $(document.body).bind("keydown.z", function(){
+    $("#alt-output").toggleClass("hidden");
+  });
+
    $("#output").html("\u280F\u2817\u2811\u280E\u280E\u2800\u280E\u280F\u2801\u2809\u2811"); // PRESS SPACE
+   $("#alt-output").html("PRESS SPACE").addClass("hidden");
 })();
