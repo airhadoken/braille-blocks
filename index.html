@@ -1,6 +1,7 @@
 <html>
 <head>
 	<title>Braille blocks</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 </head>
 
 <style>
@@ -12,14 +13,14 @@ html {
 }
 </style>
 
-<body>
-<div id="output"></div>
+<body role="application">
+<div id="output" role="application" aria-live="rude"></div>
 <div id="alt-output"></div>
 
 	<script src="./jquery.js" type="text/javascript"></script>
 	<script src="./jquery.hotkeys.js" type="text/javascript"></script>
 <script src="./tetris-loop.js" type="text/javascript"></script>
-
+<div id="updatefix" style="position:fixed; left: -20px">0</div>
 </body>
 
 </html>
