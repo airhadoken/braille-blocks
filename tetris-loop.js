@@ -235,7 +235,43 @@
 
     $("#output").html(boardstring);
     $("#alt-output").html(altboardstring);
+    drawFullBoard();
    }
+
+   function drawFullBoard() {
+      if(displayMode===1) {
+      } else {
+      }
+      
+      var boardstring = "<table>";
+      for(var i = 8; i > 0; i = Math.floor(i / 2)) {
+        boardstring += "<tr>";
+	    for(var j = 0; j < BOARD_WIDTH; j++) {
+    	  boardstring += "<td>";
+    	  if(j >= currentPiece.left 
+      	   	 && j < currentPiece.left + currentPiece.width 
+      	   	 && (piecedata[currentPiece.type][currentPiece.rotation][j - currentPiece.left] & i)) { 
+      	   	 boardstring += "\u2588";
+      	  } else {
+      	  	boardstring += "\u2591";
+      	  }
+    	  boardstring += "</td>";
+      	}
+      	boardstring += "</tr>";
+      }
+      for(i = BOARD_HEIGHT - 1; i >= 0; i--) {
+      	boardstring += "<tr>";
+      	for(j = 0; j < BOARD_WIDTH; j++) {
+      		boardstring += "<td>" + (board[j][i] ? "\u2588" : "\u2591") + "</td>";
+      	}
+      	boardstring += "</tr>";
+      }
+      boardstring += "</table>";
+      
+      $("#full-board").html(boardstring)
+   }
+
+
 
    function calculateLines() {
       for(var i = BOARD_HEIGHT - 1; i >= 0; i--) {
@@ -424,7 +460,12 @@
   $(document.body).bind("keydown.z", function(){
     $("#alt-output").toggleClass("hidden");
   });
+  
+  $(document.body).bind("keydown.x", function(){
+    $("#full-board").toggleClass("hidden");
+  });
 
    $("#output").html("\u280F\u2817\u2811\u280E\u280E\u2800\u280E\u280F\u2801\u2809\u2811"); // PRESS SPACE
    $("#alt-output").html("PRESS SPACE").addClass("hidden");
+   $("#full-board").addClass("hidden");
 })();
