@@ -242,33 +242,31 @@
       if(displayMode===1) {
       } else {
       }
-      
-      var boardstring = "<table>";
-      for(var i = 8; i > 0; i = Math.floor(i / 2)) {
-        boardstring += "<tr>";
-	    for(var j = 0; j < BOARD_WIDTH; j++) {
-    	  boardstring += "<td>";
-    	  if(j >= currentPiece.left 
-      	   	 && j < currentPiece.left + currentPiece.width 
-      	   	 && (piecedata[currentPiece.type][currentPiece.rotation][j - currentPiece.left] & i)) { 
-      	   	 boardstring += "\u2588";
-      	  } else {
-      	  	boardstring += "\u2591";
-      	  }
-    	  boardstring += "</td>";
-      	}
-      	boardstring += "</tr>";
-      }
-      for(i = BOARD_HEIGHT - 1; i >= 0; i--) {
-      	boardstring += "<tr>";
-      	for(j = 0; j < BOARD_WIDTH; j++) {
-      		boardstring += "<td>" + (board[j][i] ? "\u2588" : "\u2591") + "</td>";
-      	}
-      	boardstring += "</tr>";
-      }
-      boardstring += "</table>";
-      
-      $("#full-board").html(boardstring)
+      var fb = $("#full-board pre");
+      fb.length || (fb = $("<pre>").appendTo("#full-board"));
+      var cp = piecedata[currentPiece.type][currentPiece.rotation];
+      var pieceright = currentPiece.left + currentPiece.width;
+	  var boardstring = [];
+	  var hd = [8, 4, 2, 1];
+	  for(var i = 0; i < hd.length; i++) {
+		for(var j = 0; j < BOARD_WIDTH; j++) {
+		  if(j >= currentPiece.left 
+			 && j < pieceright
+			 && (cp[j - currentPiece.left] & hd[i])) { 
+			 boardstring.push("\u2588");
+		  } else {
+			boardstring.push("\u2591");
+		  }
+		}
+		boardstring.push("\n");
+	  }
+	  for(i = BOARD_HEIGHT - 3; i >= 0; i--) {
+		for(j = 0; j < BOARD_WIDTH; j++) {
+			boardstring.push(board[j][i] ? "\u2588" : "\u2591");
+		}
+		boardstring.push("\n");
+	  }
+	  fb.text(boardstring.join(""));
    }
 
 
@@ -462,10 +460,10 @@
   });
   
   $(document.body).bind("keydown.x", function(){
-    $("#full-board").toggleClass("hidden");
+    $("#full-board, #full-board-container").toggleClass("hidden");
   });
 
    $("#output").html("\u280F\u2817\u2811\u280E\u280E\u2800\u280E\u280F\u2801\u2809\u2811"); // PRESS SPACE
    $("#alt-output").html("PRESS SPACE").addClass("hidden");
-   $("#full-board").addClass("hidden");
+   $("#full-board, #full-board-container").addClass("hidden");
 })();

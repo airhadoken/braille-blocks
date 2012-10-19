@@ -8,17 +8,48 @@
 html {
 	font-size: 36px;
 }
+#full-board-container {
+	background-image: url(tetris-background-3d-scaled.jpg);
+	background-repeat: no-repeat;
+	position:absolute;
+	width: 1000px;
+	height: 660px;
+	/*background-size: cover;*/
+	z-index: -1;
+}
 .hidden {
 	display:none;
 }
-#full-board {	
-	float: right;
-	font-size: 12px;
+#full-board {
+	margin-left: 640px;
+	margin-top: 80px;
+	font-size: 11px;
+	color:black;
+	transform:scale3d(1,0.66,1);
+	-ms-transform:scaleY(0.66); /* IE 9 */
+	-moz-transform:scale3d(1,0.66,1); /* Firefox */
+	-webkit-transform:scaleY(0.66); /* Safari and Chrome */
+	-o-transform:scaleY(0.66); /* Opera */
+	
+}
+
+@font-face {
+  src: url(web-graphics-braille.ttf) format("truetype");
+  font-family: "Braille Tetris";
+  font-style: normal;
+}
+
+p.braille {
+    font: 2.3em "Braille Tetris";
+    letter-spacing: -0.46em;
+    line-height: 0em;
 }
 </style>
 
 <body role="application">
-<div id="full-board"></div>
+<div id="full-board-container">
+  <div id="full-board"></div>
+</div>
 <div id="output" role="application" aria-live="rude"></div>
 <div id="alt-output"></div>
 
