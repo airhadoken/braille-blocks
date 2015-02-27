@@ -14,3 +14,5 @@ Control keys:
 * space bar: start game, and toggle alternate display mode on and off.
 * keys 1 2 3 4: set how many lines to move up and down at a time in alternate display mode.
 * z key: show a non-braille display line below the braille line on screen.
+
+To play without downloading, go to this link: http://airhadoken.github.io/braille-blocks
